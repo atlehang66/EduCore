@@ -19,32 +19,114 @@ async function getInvoiceById(id, schoolId) {
     return { success: true, statusCode: 200, data: { invoice: inv } };
 }
 
-async function createInvoice(schoolId, { student_id, amount, status, due_date, issued_at }) {
-    if (!student_id) return { success: false, statusCode: 400, message: "student_id is required" };
-    if (amount === undefined || amount === null) return { success: false, statusCode: 400, message: "amount is required" };
+async function createInvoice(data) {
+    const {
+        school_id,
+        student_id,
+        term_id,
+        invoice_number,
+        description,
+        amount,
+        discount_id,
+        due_date,
+        status
+    } = data;
 
-    if (studentRepository) {
-        const student = await studentRepository.findStudentById(student_id, schoolId);
-        if (!student) return { success: false, statusCode: 404, message: "Student not found" };
+    if (!school_id) {
+        throw new Error("school_id is required");
     }
 
-    const id = await invoiceRepository.createInvoice({ schoolId, studentId: student_id, amount, status, dueDate: due_date, issuedAt: issued_at });
-    const created = await invoiceRepository.findInvoiceById(id, schoolId);
-    return { success: true, statusCode: 201, data: { invoice: created } };
+    if (!student_id) {
+        throw new Error("student_id is required");
+    }
+
+    if (!invoice_number) {
+        throw new Error("invoice_number is required");
+    }
+
+    if (amount === undefined || amount === null) {
+        throw new Error("amount is required");
+    }
+
+    return invoiceRepository.createInvoice({
+        schoolId: school_id,
+        studentId: student_id,
+        termId: term_id,
+        invoiceNumber: invoice_number,
+        description,
+        amount,
+        discountId: discount_id,
+        dueDate: due_date,
+        status
+    });
 }
 
-async function updateInvoice(id, schoolId, { student_id, amount, status, due_date, issued_at }) {
+async function updateInvoice(
+    id,
+    schoolId,
+    {
+        student_id,
+        term_id,
+        invoice_number,
+        description,
+        amount,
+        discount_id,
+        due_date,
+        status
+    }
+) {
     const existing = await invoiceRepository.findInvoiceById(id, schoolId);
-    if (!existing) return { success: false, statusCode: 404, message: "Invoice not found" };
 
-    if (student_id && studentRepository) {
-        const student = await studentRepository.findStudentById(student_id, schoolId);
-        if (!student) return { success: false, statusCode: 404, message: "Student not found" };
+    if (!existing) {
+        return {
+            success: false,
+            statusCode: 404,
+            message: "Invoice not found"
+        };
     }
 
-    await invoiceRepository.updateInvoice(id, schoolId, { studentId: student_id || existing.student_id, amount: amount === undefined ? existing.amount : amount, status: status || existing.status, dueDate: due_date || existing.due_date, issuedAt: issued_at || existing.issued_at });
-    const updated = await invoiceRepository.findInvoiceById(id, schoolId);
-    return { success: true, statusCode: 200, data: { invoice: updated } };
+    if (student_id && studentRepository) {
+        const student = await studentRepository.findStudentById(
+            student_id,
+            schoolId
+        );
+
+        if (!student) {
+            return {
+                success: false,
+                statusCode: 404,
+                message: "Student not found"
+            };
+        }
+    }
+
+    await invoiceRepository.updateInvoice(
+        id,
+        schoolId,
+        {
+            studentId: student_id ?? existing.student_id,
+            termId: term_id ?? existing.term_id,
+            invoiceNumber: invoice_number ?? existing.invoice_number,
+            description: description ?? existing.description,
+            amount: amount ?? existing.amount,
+            discountId: discount_id ?? existing.discount_id,
+            dueDate: due_date ?? existing.due_date,
+            status: status ?? existing.status
+        }
+    );
+
+    const updated = await invoiceRepository.findInvoiceById(
+        id,
+        schoolId
+    );
+
+    return {
+        success: true,
+        statusCode: 200,
+        data: {
+            invoice: updated
+        }
+    };
 }
 
 async function deleteInvoice(id, schoolId) {

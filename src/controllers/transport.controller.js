@@ -11,8 +11,20 @@ async function getTransports(req, res, next) {
 
 async function getTransportById(req, res, next) {
     try {
-        const result = await transportService.getTransportById(req.params.id, req.user.school_id);
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        console.log("Transport ID:", req.params.id);
+        console.log("School ID:", req.user.school_id);
+
+        const result = await transportService.getTransportById(
+            req.params.id,
+            req.user.school_id
+        );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success ? { message: result.message } : {})
+        });
+
     } catch (error) {
         next(error);
     }
@@ -20,9 +32,33 @@ async function getTransportById(req, res, next) {
 
 async function createTransport(req, res, next) {
     try {
-        const { name, vehicle_no, capacity, driver_id, route, active } = req.body;
-        const result = await transportService.createTransport(req.user.school_id, { name, vehicle_no, capacity, driver_id, route, active });
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const {
+            routeName,
+            vehicleNumber,
+            driverName,
+            driverPhone,
+            capacity
+        } = req.body;
+
+        const result = await transportService.createTransport(
+            req.user.school_id,
+            {
+                routeName,
+                vehicleNumber,
+                driverName,
+                driverPhone,
+                capacity
+            }
+        );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success
+                ? { message: result.message }
+                : {})
+        });
+
     } catch (error) {
         next(error);
     }

@@ -9,6 +9,7 @@ router.use(authenticate);
 router.get("/", requirePermission("documents.manage"), fileController.getFiles);
 router.get("/:id", requirePermission("documents.manage"), fileController.getFileById);
 router.post("/", requirePermission("documents.manage"), fileController.createFile);
+router.put("/", requirePermission("documents.manage"), fileController.updateFile)
 router.delete("/:id", requirePermission("documents.manage"), fileController.deleteFile);
 
 module.exports = router;

@@ -11,19 +11,110 @@ async function getEventById(id, schoolId) {
     return { success: true, statusCode: 200, data: { event: ev } };
 }
 
-async function createEvent(schoolId, { title, description, start_at, end_at, location }) {
-    if (!title) return { success: false, statusCode: 400, message: "title is required" };
-    const id = await eventRepository.createEvent({ schoolId, title, description, startAt: start_at, endAt: end_at, location });
-    const created = await eventRepository.findEventById(id, schoolId);
-    return { success: true, statusCode: 201, data: { event: created } };
-}
+async function createEvent(
+    schoolId,
+    {
+        title,
+        description,
+        eventDate,
+        startTime,
+        endTime,
+        location,
+        audience
+    }
+) {
+    if (!title) {
+        return {
+            success: false,
+            statusCode: 400,
+            message: "title is required"
+        };
+    }
 
-async function updateEvent(id, schoolId, payload) {
-    const existing = await eventRepository.findEventById(id, schoolId);
-    if (!existing) return { success: false, statusCode: 404, message: "Event not found" };
-    await eventRepository.updateEvent(id, schoolId, { title: payload.title || existing.title, description: payload.description, startAt: payload.start_at, endAt: payload.end_at, location: payload.location });
-    const updated = await eventRepository.findEventById(id, schoolId);
-    return { success: true, statusCode: 200, data: { event: updated } };
+    if (!eventDate) {
+        return {
+            success: false,
+            statusCode: 400,
+            message: "eventDate is required"
+        };
+    }
+
+    const eventId = await eventRepository.createEvent({
+        schoolId,
+        title,
+        description,
+        eventDate,
+        startTime,
+        endTime,
+        location,
+        audience
+    });
+
+    const created = await eventRepository.findEventById(
+        eventId,
+        schoolId
+    );
+
+    return {
+        success: true,
+        statusCode: 201,
+        data: {
+            event: created
+        }
+    };
+}
+async function updateEvent(
+    id,
+    schoolId,
+    {
+        title,
+        description,
+        eventDate,
+        startTime,
+        endTime,
+        location,
+        audience
+    }
+) {
+    const existing = await eventRepository.findEventById(
+        id,
+        schoolId
+    );
+
+    if (!existing) {
+        return {
+            success: false,
+            statusCode: 404,
+            message: "Event not found"
+        };
+    }
+
+    await eventRepository.updateEvent(
+        id,
+        schoolId,
+        {
+            title: title ?? existing.title,
+            description: description ?? existing.description,
+            eventDate: eventDate ?? existing.event_date,
+            startTime: startTime ?? existing.start_time,
+            endTime: endTime ?? existing.end_time,
+            location: location ?? existing.location,
+            audience: audience ?? existing.audience
+        }
+    );
+
+    const updated = await eventRepository.findEventById(
+        id,
+        schoolId
+    );
+
+    return {
+        success: true,
+        statusCode: 200,
+        data: {
+            event: updated
+        }
+    };
 }
 
 async function deleteEvent(id, schoolId) {

@@ -2,30 +2,65 @@ const loginHistoryService = require("../services/loginHistory.service");
 
 async function getLoginHistory(req, res, next) {
     try {
-        const result = await loginHistoryService.getAllLoginHistory();
-        return res.status(result.statusCode).json({ success: result.success, data: result.data });
+        const schoolId = req.user.schoolId;
+
+        const result = await loginHistoryService.getAllLoginHistory(schoolId);
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            data: result.data
+        });
     } catch (error) {
         next(error);
     }
 }
 
-async function getLoginById(req, res, next) {
+async function getLoginById(req, res) {
     try {
-        const result = await loginHistoryService.getLoginById(req.params.id);
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const { id } = req.params;
+        const schoolId = req.user.schoolId;
+
+        const result = await loginHistoryService.getLoginById(
+            id,
+            schoolId
+        );
+
+        return res.status(result.statusCode).json(result);
+
     } catch (error) {
-        next(error);
+        console.error("GET LOGIN HISTORY ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 }
 
-async function createLogin(req, res, next) {
+async function createLogin(req, res) {
     try {
-        const { user_id, ip_address, user_agent, success } = req.body;
-        const result = await loginHistoryService.createLogin({ user_id, ip_address, user_agent, success });
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const result = await loginHistoryService.createLogin({
+            schoolId: req.user.school_id,
+            userId: req.user.user_id,
+            ipAddress: req.body.ip_address,
+            userAgent: req.body.user_agent,
+            success: req.body.success
+        });
+
+        return res.status(result.statusCode).json(result);
+
     } catch (error) {
-        next(error);
+        console.error("CREATE LOGIN HISTORY ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 }
 
-module.exports = { getLoginHistory, getLoginById, createLogin };
+module.exports = {
+    getLoginHistory,
+    getLoginById,
+    createLogin
+};

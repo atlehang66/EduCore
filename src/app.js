@@ -37,12 +37,25 @@ const discountRoutes = require("./routes/discount.routes");
 const assetRoutes = require("./routes/asset.routes");
 const transportRoutes = require("./routes/transport.routes");
 const studentTransportRoutes = require("./routes/studentTransport.routes");
+const auditLogRoutes = require("./routes/auditLog.routes");
+const documentRoutes = require("./routes/document.routes");
+const eventRoutes = require("./routes/event.routes");
+const fileRoutes = require("./routes/file.routes");
+const inventoryRoutes = require("./routes/inventory.routes");
+const libraryBookRoutes = require("./routes/libraryBook.routes");
+const loanRoutes = require ("./routes/loan.routes");
+const loginHistory = require ("./routes/loginHistory.routes");
+const message = require ("./routes/message.routes");
+const notification = require ("./routes/notification.routes");
 
 const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/v1/library-books", libraryBookRoutes);
+app.use("/api/v1/documents", documentRoutes);
+app.use("/api/v1/audit-logs", auditLogRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/students", studentRoutes);
 app.use("/api/v1/grades", gradeRoutes);
@@ -77,9 +90,13 @@ app.use("/api/v1/transports", transportRoutes);
 app.use("/api/v1/student-transports", studentTransportRoutes);
 app.use("/api/v1", rolePermissionRoutes);
 const userRoleRoutes = require("./routes/userRole.routes");
-app.use("/api/v1", userRoleRoutes);
-
-
+app.use("/api/v1/events", require("./routes/event.routes"));
+app.use("/api/v1/files", require("./routes/file.routes"));
+app.use("/api/v1/inventory", require("./routes/inventory.routes"));
+app.use("/api/v1/loans", require("./routes/loan.routes"));
+app.use("/api/v1/login-history", require("./routes/loginHistory.routes"));
+app.use("/api/v1/messages", require("./routes/message.routes"));
+app.use("/api/v1/notifications", require("./routes/notification.routes"));
 // Health check
 app.get("/api/v1/health", async (req, res) => {
     try {

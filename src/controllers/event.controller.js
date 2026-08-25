@@ -20,9 +20,34 @@ async function getEventById(req, res, next) {
 
 async function createEvent(req, res, next) {
     try {
-        const { title, description, start_at, end_at, location } = req.body;
-        const result = await eventService.createEvent(req.user.school_id, { title, description, start_at, end_at, location });
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const {
+            title,
+            description,
+            eventDate,
+            startTime,
+            endTime,
+            location,
+            audience
+        } = req.body;
+
+        const result = await eventService.createEvent(
+            req.user.school_id,
+            {
+                title,
+                description,
+                eventDate,
+                startTime,
+                endTime,
+                location,
+                audience
+            }
+        );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success ? { message: result.message } : {})
+        });
     } catch (error) {
         next(error);
     }
@@ -30,9 +55,35 @@ async function createEvent(req, res, next) {
 
 async function updateEvent(req, res, next) {
     try {
-        const payload = req.body;
-        const result = await eventService.updateEvent(req.params.id, req.user.school_id, payload);
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const {
+            title,
+            description,
+            eventDate,
+            startTime,
+            endTime,
+            location,
+            audience
+        } = req.body;
+
+        const result = await eventService.updateEvent(
+            req.params.id,
+            req.user.school_id,
+            {
+                title,
+                description,
+                eventDate,
+                startTime,
+                endTime,
+                location,
+                audience
+            }
+        );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success ? { message: result.message } : {})
+        });
     } catch (error) {
         next(error);
     }

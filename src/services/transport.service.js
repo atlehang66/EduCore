@@ -1,5 +1,5 @@
 const repo = require("../repositories/transport.repository");
-
+const transportRepository = require("../repositories/transport.repository");
 async function getAllTransport(schoolId) {
     const rows = await repo.findAllTransport(schoolId);
     return { success: true, statusCode: 200, data: { transports: rows } };
@@ -11,38 +11,110 @@ async function getTransportById(id, schoolId) {
     return { success: true, statusCode: 200, data: { transport: t } };
 }
 
-async function createTransport(schoolId, { name, vehicle_no, capacity, driver_id, route, active }) {
-    if (!name) return { success: false, statusCode: 400, message: "name is required" };
-    const id = await repo.createTransport({
-        schoolId,
-        name,
-        vehicleNo: vehicle_no,
-        capacity,
-        driverId: driver_id,
-        route,
-        active: active === undefined ? 1 : (active ? 1 : 0)
+async function createStudentTransport(
+    schoolId,
+    {
+        studentId,
+        transportId,
+        pickupPoint
+    }
+) {
+    if (!studentId) {
+        return {
+            success: false,
+            statusCode: 400,
+            message: "studentId is required"
+        };
+    }
+
+    if (!transportId) {
+        return {
+            success: false,
+            statusCode: 400,
+            message: "transportId is required"
+        };
+    }
+
+    const existing =
+        await studentTransportRepository.findStudentTransportById(
+            studentId,
+            transportId,
+            schoolId
+        );
+
+    if (existing) {
+        return {
+            success: false,
+            statusCode: 409,
+            message: "Student is already assigned to this transport"
+        };
+    }
+
+    await studentTransportRepository.createStudentTransport({
+        studentId,
+        transportId,
+        pickupPoint
     });
-    const created = await repo.findTransportById(id, schoolId);
-    return { success: true, statusCode: 201, data: { transport: created } };
+
+    const created =
+        await studentTransportRepository.findStudentTransportById(
+            studentId,
+            transportId,
+            schoolId
+        );
+
+    return {
+        success: true,
+        statusCode: 201,
+        data: {
+            studentTransport: created
+        }
+    };
 }
 
 async function updateTransport(id, schoolId, payload) {
-    const existing = await repo.findTransportById(id, schoolId);
-    if (!existing) return { success: false, statusCode: 404, message: "Transport not found" };
+    const existing = await transportRepository.findTransportById(
+        id,
+        schoolId
+    );
 
-    await repo.updateTransport(id, schoolId, {
-        name: payload.name !== undefined ? payload.name : existing.name,
-        vehicleNo: payload.vehicle_no !== undefined ? payload.vehicle_no : existing.vehicle_no,
-        capacity: payload.capacity !== undefined ? payload.capacity : existing.capacity,
-        driverId: payload.driver_id !== undefined ? payload.driver_id : existing.driver_id,
-        route: payload.route !== undefined ? payload.route : existing.route,
-        active: payload.active === undefined ? existing.active : (payload.active ? 1 : 0)
-    });
+    if (!existing) {
+        return {
+            success: false,
+            statusCode: 404,
+            message: "Transport not found"
+        };
+    }
 
-    const updated = await repo.findTransportById(id, schoolId);
-    return { success: true, statusCode: 200, data: { transport: updated } };
+    await transportRepository.updateTransport(
+        id,
+        schoolId,
+        {
+            routeName: payload.routeName ?? existing.route_name,
+            vehicleNumber:
+                payload.vehicleNumber ?? existing.vehicle_number,
+            driverName:
+                payload.driverName ?? existing.driver_name,
+            driverPhone:
+                payload.driverPhone ?? existing.driver_phone,
+            capacity:
+                payload.capacity ?? existing.capacity
+        }
+    );
+
+    const updated = await transportRepository.findTransportById(
+        id,
+        schoolId
+    );
+
+    return {
+        success: true,
+        statusCode: 200,
+        data: {
+            transport: updated
+        }
+    };
 }
-
 async function deleteTransport(id, schoolId) {
     const existing = await repo.findTransportById(id, schoolId);
     if (!existing) return { success: false, statusCode: 404, message: "Transport not found" };
@@ -58,7 +130,7 @@ async function deleteTransport(id, schoolId) {
 module.exports = {
     getAllTransport,
     getTransportById,
-    createTransport,
+    createStudentTransport,
     updateTransport,
     deleteTransport
 };

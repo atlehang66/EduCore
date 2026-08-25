@@ -1,28 +1,27 @@
 const pool = require("../config/database");
 
 async function findAllApiKeys(schoolId) {
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
         `
         SELECT
             api_key_id,
             school_id,
+            key_hash,
             name,
-            api_key,
-            api_secret,
+            scopes,
             is_active,
-            expires_at,
             created_at,
-            updated_at
+            expires_at,
+            last_used_at
         FROM api_keys
         WHERE school_id = ?
-        ORDER BY api_key_id DESC
+        ORDER BY created_at DESC
         `,
         [schoolId]
     );
 
     return rows;
 }
-
 async function findApiKeyById(apiKeyId, schoolId) {
     const [rows] = await pool.execute(
         `
@@ -30,12 +29,11 @@ async function findApiKeyById(apiKeyId, schoolId) {
             api_key_id,
             school_id,
             name,
-            api_key,
-            api_secret,
+            scopes,
             is_active,
-            expires_at,
             created_at,
-            updated_at
+            expires_at,
+            last_used_at
         FROM api_keys
         WHERE api_key_id = ?
           AND school_id = ?
@@ -47,48 +45,85 @@ async function findApiKeyById(apiKeyId, schoolId) {
     return rows[0] || null;
 }
 
-async function findApiKeyByKey(apiKeyValue, schoolId) {
+async function findApiKeyByKeyHash(keyHash, schoolId) {
     const [rows] = await pool.execute(
         `
-        SELECT api_key_id FROM api_keys WHERE api_key = ? AND school_id = ? LIMIT 1
+        SELECT
+            api_key_id,
+            school_id,
+            name,
+            scopes,
+            is_active,
+            expires_at,
+            last_used_at
+        FROM api_keys
+        WHERE key_hash = ?
+          AND school_id = ?
+        LIMIT 1
         `,
-        [apiKeyValue, schoolId]
+        [keyHash, schoolId]
     );
 
     return rows[0] || null;
 }
 
-async function createApiKey({ schoolId, name, apiKey, apiSecret, isActive, expiresAt }) {
+async function createApiKey({
+    schoolId,
+    name,
+    keyHash,
+    scopes,
+    isActive,
+    expiresAt
+}) {
     const [result] = await pool.execute(
         `
         INSERT INTO api_keys (
             school_id,
+            key_hash,
             name,
-            api_key,
-            api_secret,
+            scopes,
             is_active,
             expires_at
-        ) VALUES (?, ?, ?, ?, ?, ?)
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
         `,
-        [schoolId, name, apiKey, apiSecret, isActive ? 1 : 0, expiresAt || null]
+        [
+            schoolId,
+            keyHash,
+            name,
+            scopes ? JSON.stringify(scopes) : null,
+            isActive ? 1 : 0,
+            expiresAt || null
+        ]
     );
 
     return result.insertId;
 }
 
-async function updateApiKey(apiKeyId, schoolId, { name, apiSecret, isActive, expiresAt }) {
+async function updateApiKey(
+    apiKeyId,
+    schoolId,
+    { name, scopes, isActive, expiresAt }
+) {
     const [result] = await pool.execute(
         `
         UPDATE api_keys
         SET
             name = ?,
-            api_secret = ?,
+            scopes = ?,
             is_active = ?,
             expires_at = ?
         WHERE api_key_id = ?
           AND school_id = ?
         `,
-        [name, apiSecret || null, isActive ? 1 : 0, expiresAt || null, apiKeyId, schoolId]
+        [
+            name,
+            scopes || null,
+            isActive ? 1 : 0,
+            expiresAt || null,
+            apiKeyId,
+            schoolId
+        ]
     );
 
     return result.affectedRows;
@@ -110,7 +145,7 @@ async function deleteApiKey(apiKeyId, schoolId) {
 module.exports = {
     findAllApiKeys,
     findApiKeyById,
-    findApiKeyByKey,
+    findApiKeyByKeyHash,
     createApiKey,
     updateApiKey,
     deleteApiKey

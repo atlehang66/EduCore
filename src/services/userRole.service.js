@@ -47,9 +47,12 @@ async function removeRoleFromUser(userId, roleId, schoolId) {
     await userRoleRepository.deleteUserRole(userId, roleId);
     return { success: true, statusCode: 200, message: "Role removed from user" };
 }
-
+// async function putRoleToUser({ userId, roleId, schoolId }) {
+//     if (!userId || !roleId) return { success: false, statusCode: 400, message: "user_id and role_id are required" };}
+    
 module.exports = {
     getRolesForUser,
     addRoleToUser,
-    removeRoleFromUser
+    removeRoleFromUser,
+    // putRoleToUser
 };

@@ -2,26 +2,75 @@ const pool = require("../config/database");
 
 async function findAllAuditLogs() {
     const [rows] = await pool.query(
-        `SELECT id, user_id, action, details, ip_address, created_at FROM audit_logs ORDER BY id DESC`
+        `
+        SELECT
+            action,
+            table_name,
+            record_id,
+            old_values,
+            new_values,
+            ip_address,
+            created_at
+        FROM audit_logs
+        ORDER BY created_at DESC
+        `
     );
+
     return rows;
 }
 
-async function findAuditLogById(id) {
+async function findAuditLogById(recordId) {
     const [rows] = await pool.query(
-        `SELECT id, user_id, action, details, ip_address, created_at FROM audit_logs WHERE id = ? LIMIT 1`,
-        [id]
+        `
+        SELECT
+            action,
+            table_name,
+            record_id,
+            old_values,
+            new_values,
+            ip_address,
+            created_at
+        FROM audit_logs
+        WHERE record_id = ?
+        LIMIT 1
+        `,
+        [recordId]
     );
+
     return rows[0] || null;
 }
 
-// write-only in many systems, but include basic create for completeness
-async function createAuditLog({ userId, action, details, ipAddress }) {
+async function createAuditLog({
+    action,
+    tableName,
+    recordId,
+    oldValues,
+    newValues,
+    ipAddress
+}) {
     const [result] = await pool.query(
-        `INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)`,
-        [userId || null, action, details || null, ipAddress || null]
+        `
+        INSERT INTO audit_logs (
+            action,
+            table_name,
+            record_id,
+            old_values,
+            new_values,
+            ip_address
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        `,
+        [
+            action,
+            tableName,
+            recordId,
+            oldValues ? JSON.stringify(oldValues) : null,
+            newValues ? JSON.stringify(newValues) : null,
+            ipAddress || null
+        ]
     );
-    return result.insertId;
+
+    return result;
 }
 
 module.exports = {

@@ -2,41 +2,153 @@ const pool = require("../config/database");
 
 async function findAllInvoices(schoolId) {
     const [rows] = await pool.query(
-        `SELECT invoice_id, school_id, student_id, amount, status, due_date, issued_at, created_at, updated_at FROM invoices WHERE school_id = ? ORDER BY invoice_id DESC`,
+        `
+        SELECT
+            invoice_id,
+            school_id,
+            student_id,
+            term_id,
+            invoice_number,
+            description,
+            amount,
+            discount_id,
+            due_date,
+            status,
+            created_at
+        FROM invoices
+        WHERE school_id = ?
+        ORDER BY invoice_id DESC
+        `,
         [schoolId]
     );
+
     return rows;
 }
 
-async function findInvoiceById(id, schoolId) {
+async function findInvoiceById(invoiceId, schoolId) {
     const [rows] = await pool.query(
-        `SELECT invoice_id, school_id, student_id, amount, status, due_date, issued_at, created_at, updated_at FROM invoices WHERE invoice_id = ? AND school_id = ? LIMIT 1`,
-        [id, schoolId]
+        `
+        SELECT
+            invoice_id,
+            school_id,
+            student_id,
+            term_id,
+            invoice_number,
+            description,
+            amount,
+            discount_id,
+            due_date,
+            status,
+            created_at
+        FROM invoices
+        WHERE invoice_id = ?
+          AND school_id = ?
+        LIMIT 1
+        `,
+        [invoiceId, schoolId]
     );
+
     return rows[0] || null;
 }
 
-async function createInvoice({ schoolId, studentId, amount, status, dueDate, issuedAt }) {
+async function createInvoice({
+    schoolId,
+    studentId,
+    termId,
+    invoiceNumber,
+    description,
+    amount,
+    discountId,
+    dueDate,
+    status
+}) {
     const [result] = await pool.query(
-        `INSERT INTO invoices (school_id, student_id, amount, status, due_date, issued_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        [schoolId, studentId, amount, status || 'pending', dueDate || null, issuedAt || null]
+        `
+        INSERT INTO invoices (
+            school_id,
+            student_id,
+            term_id,
+            invoice_number,
+            description,
+            amount,
+            discount_id,
+            due_date,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+            schoolId,
+            studentId,
+            termId || null,
+            invoiceNumber,
+            description || null,
+            amount,
+            discountId || null,
+            dueDate || null,
+            status || "unpaid"
+        ]
     );
+
     return result.insertId;
 }
 
-async function updateInvoice(id, schoolId, { studentId, amount, status, dueDate, issuedAt }) {
+async function updateInvoice(
+    invoiceId,
+    schoolId,
+    {
+        studentId,
+        termId,
+        invoiceNumber,
+        description,
+        amount,
+        discountId,
+        dueDate,
+        status
+    }
+) {
     const [result] = await pool.query(
-        `UPDATE invoices SET student_id = ?, amount = ?, status = ?, due_date = ?, issued_at = ? WHERE invoice_id = ? AND school_id = ?`,
-        [studentId, amount, status, dueDate || null, issuedAt || null, id, schoolId]
+        `
+        UPDATE invoices
+        SET
+            student_id = ?,
+            term_id = ?,
+            invoice_number = ?,
+            description = ?,
+            amount = ?,
+            discount_id = ?,
+            due_date = ?,
+            status = ?
+        WHERE invoice_id = ?
+          AND school_id = ?
+        `,
+        [
+            studentId,
+            termId || null,
+            invoiceNumber,
+            description || null,
+            amount,
+            discountId || null,
+            dueDate || null,
+            status,
+            invoiceId,
+            schoolId
+        ]
     );
+
     return result.affectedRows > 0;
 }
 
-async function deleteInvoice(id, schoolId) {
+async function deleteInvoice(invoiceId, schoolId) {
     const [result] = await pool.query(
-        `DELETE FROM invoices WHERE invoice_id = ? AND school_id = ?`,
-        [id, schoolId]
+        `
+        DELETE FROM invoices
+        WHERE invoice_id = ?
+          AND school_id = ?
+        `,
+        [invoiceId, schoolId]
     );
+
     return result.affectedRows > 0;
 }
 

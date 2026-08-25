@@ -20,9 +20,34 @@ async function getLoanById(req, res, next) {
 
 async function createLoan(req, res, next) {
     try {
-        const { book_id, student_id, loaned_at, due_at } = req.body;
-        const result = await loanService.createLoan(req.user.school_id, { book_id, student_id, loaned_at, due_at });
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const {
+            bookId,
+            studentId,
+            staffId,
+            borrowedAt,
+            dueAt,
+            status
+        } = req.body;
+
+        const result = await loanService.createLoan(
+            req.user.school_id,
+            {
+                bookId,
+                studentId,
+                staffId,
+                borrowedAt,
+                dueAt,
+                status
+            }
+        );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success
+                ? { message: result.message }
+                : {})
+        });
     } catch (error) {
         next(error);
     }

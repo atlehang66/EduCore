@@ -1,26 +1,121 @@
 const pool = require("../config/database");
 
-async function findAllLoginHistory() {
+async function findAllLoginHistory(schoolId) {
     const [rows] = await pool.query(
-        `SELECT id, user_id, ip_address, user_agent, success, created_at FROM login_history ORDER BY id DESC`
+        `
+        SELECT
+            login_id,
+            user_id,
+            school_id,
+            login_at,
+            ip_address,
+            user_agent,
+            success
+        FROM login_history
+        WHERE school_id = ?
+        ORDER BY login_id DESC
+        `,
+        [schoolId]
     );
+
     return rows;
 }
 
-async function findLoginById(id) {
+async function getLoginHistoryById(id, schoolId) {
     const [rows] = await pool.query(
-        `SELECT id, user_id, ip_address, user_agent, success, created_at FROM login_history WHERE id = ? LIMIT 1`,
-        [id]
+        `
+        SELECT
+            login_id,
+            user_id,
+            school_id,
+            login_at,
+            ip_address,
+            user_agent,
+            success
+        FROM login_history
+        WHERE login_id = ?
+          AND school_id = ?
+        LIMIT 1
+        `,
+        [id, schoolId]
     );
+
     return rows[0] || null;
 }
 
-async function createLoginHistory({ userId, ipAddress, userAgent, success }) {
-    const [result] = await pool.query(
-        `INSERT INTO login_history (user_id, ip_address, user_agent, success) VALUES (?, ?, ?, ?)`,
-        [userId || null, ipAddress || null, userAgent || null, success ? 1 : 0]
-    );
+async function createLoginHistory({
+    schoolId,
+    userId,
+    loginAt,
+    ipAddress,
+    userAgent,
+    success
+}) {
+    let result;
+
+    if (loginAt) {
+        [result] = await pool.query(
+            `
+            INSERT INTO login_history (
+                user_id,
+                school_id,
+                login_at,
+                ip_address,
+                user_agent,
+                success
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            `,
+            [
+                userId,
+                schoolId,
+                loginAt,
+                ipAddress || null,
+                userAgent || null,
+                success ?? 1
+            ]
+        );
+    } else {
+        [result] = await pool.query(
+            `
+            INSERT INTO login_history (
+                user_id,
+                school_id,
+                ip_address,
+                user_agent,
+                success
+            )
+            VALUES (?, ?, ?, ?, ?)
+            `,
+            [
+                userId,
+                schoolId,
+                ipAddress || null,
+                userAgent || null,
+                success ?? 1
+            ]
+        );
+    }
+
     return result.insertId;
 }
 
-module.exports = { findAllLoginHistory, findLoginById, createLoginHistory };
+async function deleteLoginHistory(id, schoolId) {
+    const [result] = await pool.query(
+        `
+        DELETE FROM login_history
+        WHERE login_id = ?
+          AND school_id = ?
+        `,
+        [id, schoolId]
+    );
+
+    return result.affectedRows > 0;
+}
+
+module.exports = {
+    findAllLoginHistory,
+    getLoginHistoryById,
+    createLoginHistory,
+    deleteLoginHistory
+};

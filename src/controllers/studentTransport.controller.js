@@ -20,9 +20,30 @@ async function getStudentTransportById(req, res, next) {
 
 async function createStudentTransport(req, res, next) {
     try {
-        const { student_id, transport_id, pickup_point, dropoff_point, active } = req.body;
-        const result = await studentTransportService.createStudentTransport(req.user.school_id, { student_id, transport_id, pickup_point, dropoff_point, active });
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const {
+            studentId,
+            transportId,
+            pickupPoint
+        } = req.body;
+
+        const result =
+            await studentTransportService.createStudentTransport(
+                req.user.school_id,
+                {
+                    studentId,
+                    transportId,
+                    pickupPoint
+                }
+            );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success
+                ? { message: result.message }
+                : {})
+        });
+
     } catch (error) {
         next(error);
     }
@@ -40,8 +61,22 @@ async function updateStudentTransport(req, res, next) {
 
 async function deleteStudentTransport(req, res, next) {
     try {
-        const result = await studentTransportService.deleteStudentTransport(req.params.id, req.user.school_id);
-        return res.status(result.statusCode).json({ success: result.success, message: result.message });
+        const { studentId, transportId } = req.params;
+
+        const result =
+            await studentTransportService.deleteStudentTransport(
+                studentId,
+                transportId,
+                req.user.school_id
+            );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(!result.success
+                ? { message: result.message }
+                : { message: result.message })
+        });
+
     } catch (error) {
         next(error);
     }

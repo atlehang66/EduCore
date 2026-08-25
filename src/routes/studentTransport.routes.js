@@ -6,10 +6,10 @@ const { requirePermission } = require("../middleware/role.middleware");
 const router = express.Router();
 router.use(authenticate);
 
-router.get("/", requirePermission("transport.manage"), studentTransportController.getStudentTransports);
-router.get("/:id", requirePermission("transport.manage"), studentTransportController.getStudentTransportById);
-router.post("/", requirePermission("transport.manage"), studentTransportController.createStudentTransport);
-router.put("/:id", requirePermission("transport.manage"), studentTransportController.updateStudentTransport);
-router.delete("/:id", requirePermission("transport.manage"), studentTransportController.deleteStudentTransport);
+router.get("/", requirePermission("finance.manage"), studentTransportController.getStudentTransports);
+router.get("/:id", requirePermission("finance.manage"), studentTransportController.getStudentTransportById);
+router.post("/", requirePermission("finance.manage"), studentTransportController.createStudentTransport);
+router.put("/:id", requirePermission("finance.manage"), studentTransportController.updateStudentTransport);
+router.delete("/:studentId/:transportId", requirePermission("finance.manage"), studentTransportController.deleteStudentTransport);
 
 module.exports = router;

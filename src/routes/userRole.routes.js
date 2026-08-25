@@ -17,7 +17,11 @@ router.post(
     requirePermission("academics.manage"),
     urController.addRole
 );
-
+// router.put(
+//     "/users/:userId/roles/:roleId",
+//     requirePermission("academics.manage"),
+//     urController.updateRole
+// );
 router.delete(
     "/users/:userId/roles/:roleId",
     requirePermission("academics.manage"),

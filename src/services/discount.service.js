@@ -21,18 +21,56 @@ async function createDiscount(schoolId, { name, type, percentage, amount, is_act
     return { success: true, statusCode: 201, data: { discount: created } };
 }
 
-async function updateDiscount(id, schoolId, { name, type, percentage, amount, is_active, starts_at, ends_at }) {
-    const existing = await discountRepository.findDiscountById(id, schoolId);
-    if (!existing) return { success: false, statusCode: 404, message: "Discount not found" };
+async function updateDiscount(
+    id,
+    schoolId,
+    {
+        name,
+        description,
+        discount_type,
+        value,
+        valid_from,
+        valid_to
+    }
+) {
+    const existing = await discountRepository.findDiscountById(
+        id,
+        schoolId
+    );
 
-    if (name && name !== existing.name) {
-        const other = await discountRepository.findDiscountByName(name, schoolId);
-        if (other) return { success: false, statusCode: 409, message: "Another discount with this name exists" };
+    if (!existing) {
+        return {
+            success: false,
+            statusCode: 404,
+            message: "Discount not found"
+        };
     }
 
-    await discountRepository.updateDiscount(id, schoolId, { name: name || existing.name, type, percentage, amount, isActive: is_active === undefined ? !!existing.is_active : !!is_active, startsAt: starts_at, endsAt: ends_at });
-    const updated = await discountRepository.findDiscountById(id, schoolId);
-    return { success: true, statusCode: 200, data: { discount: updated } };
+    await discountRepository.updateDiscount(
+        id,
+        schoolId,
+        {
+            name: name ?? existing.name,
+            description: description ?? existing.description,
+            discountType: discount_type ?? existing.discount_type,
+            value: value ?? existing.value,
+            validFrom: valid_from ?? existing.valid_from,
+            validTo: valid_to ?? existing.valid_to
+        }
+    );
+
+    const updated = await discountRepository.findDiscountById(
+        id,
+        schoolId
+    );
+
+    return {
+        success: true,
+        statusCode: 200,
+        data: {
+            discount: updated
+        }
+    };
 }
 
 async function deleteDiscount(id, schoolId) {

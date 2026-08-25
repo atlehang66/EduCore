@@ -20,14 +20,45 @@ async function getAssetById(req, res, next) {
 
 async function createAsset(req, res, next) {
     try {
-        const { name, description, value, location, status } = req.body;
-        const result = await assetService.createAsset(req.user.school_id, { name, description, value, location, status });
-        return res.status(result.statusCode).json({ success: result.success, ...(result.data ? { data: result.data } : {}), ...(!result.success ? { message: result.message } : {}) });
+        const {
+            assetTag,
+            name,
+            category,
+            purchaseDate,
+            purchaseValue,
+            currentValue,
+            location,
+            assetCondition,
+            assignedTo
+        } = req.body;
+
+        const result = await assetService.createAsset(
+            req.user.school_id,
+            {
+                assetTag,
+                name,
+                category,
+                purchaseDate,
+                purchaseValue,
+                currentValue,
+                location,
+                assetCondition,
+                assignedTo
+            }
+        );
+
+        return res.status(result.statusCode).json({
+            success: result.success,
+            ...(result.data ? { data: result.data } : {}),
+            ...(!result.success
+                ? { message: result.message }
+                : {})
+        });
+
     } catch (error) {
         next(error);
     }
 }
-
 async function updateAsset(req, res, next) {
     try {
         const payload = req.body;
